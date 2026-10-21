@@ -77,3 +77,49 @@ h1 span{color:var(--green)}
 @media(max-width:900px){.site-shell{padding:0 25px}.hero{gap:35px;grid-template-columns:1fr 0.9fr;padding:60px 0}.auth-content{padding:26px}h1{letter-spacing:-1.8px}}
 @media(max-width:700px){.site-shell{padding:0 19px}.topbar{height:70px}.topbar-label{font-size:8px;letter-spacing:.7px}.hero{grid-template-columns:1fr;gap:38px;padding:48px 0 55px}.hero-description{max-width:unset}h1{font-size:42px}.auth-content{padding:25px}.metrics-grid{grid-template-columns:1fr}.metric-card{min-height:135px}.section-heading{align-items:start;flex-direction:column}.footer{padding:19px 0;flex-wrap:wrap}.footer>span:nth-child(2){order:3;width:100%}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
+
+/* Calculadora de investimento */
+.calc-shell{padding-bottom:28px}
+.calc-back{padding:10px 14px;font-size:12px}
+.calc-hero{padding:54px 0 34px;max-width:760px}
+.calc-hero h1{margin:12px 0 18px;font-size:clamp(36px,4.2vw,52px)}
+.calc-layout{display:grid;grid-template-columns:minmax(270px,.78fr) minmax(0,1.22fr);gap:22px;align-items:start;padding-bottom:54px}
+.calc-layout .auth-content{padding:26px}
+.calc-layout .card-kicker{margin-bottom:16px}
+.calc-field{display:grid;gap:8px;margin-bottom:17px}
+.calc-field label{font-size:12px;color:#d1deeb}
+.calc-input-wrap{display:flex;align-items:center;gap:9px;border:1px solid #2b3e52;border-radius:9px;padding:0 12px;background:#091522;color:#a9bed2}
+.calc-input-wrap:focus-within{border-color:#82c6a2;box-shadow:0 0 0 3px #9be5bd14}
+.calc-input-wrap input{width:100%;min-width:0;border:0;outline:0;padding:12px 0;background:transparent;color:var(--text);font-size:13px}
+.calc-field select{width:100%;border:1px solid #2b3e52;border-radius:9px;padding:12px;background:#091522;color:var(--text);font-size:13px}
+.calc-reset{margin-top:4px}
+.calc-results{display:grid;gap:18px;min-width:0}
+.calc-main-label{font-size:12px;color:var(--muted);margin-bottom:8px}
+.calc-main-value{font-family:Manrope,sans-serif;font-size:clamp(30px,4vw,44px);letter-spacing:-1.8px;font-weight:800;color:var(--green);margin:0 0 25px;overflow-wrap:anywhere}
+.calc-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.calc-metrics>div{padding:14px 12px;background:#ffffff05;border:1px solid var(--line);border-radius:10px;min-width:0}
+.calc-metrics span,.calc-metrics strong{display:block}
+.calc-metrics span{font-size:10px;line-height:1.5;color:var(--muted);min-height:30px}
+.calc-metrics strong{font-size:13px;line-height:1.5;margin-top:8px;overflow-wrap:anywhere}
+.calc-positive{color:var(--green)}
+.calc-negative{color:#ffb0a6}
+.calc-chart-card .auth-content{padding-bottom:20px}
+.calc-legend{display:flex;flex-wrap:wrap;gap:16px;color:var(--muted);font-size:11px;margin:0 0 14px}
+.calc-legend span{display:flex;align-items:center;gap:7px}
+.calc-legend i{display:inline-block;width:18px;height:3px;border-radius:2px}
+.legend-value{background:var(--green)}
+.legend-invested{background:var(--blue)}
+.calc-chart{width:100%;height:auto;display:block;overflow:visible}
+.calc-table-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:20px;text-align:left;border:0;background:transparent;color:var(--text);padding:0}
+.calc-table-toggle .card-kicker{display:block;margin-bottom:9px}
+.calc-table-toggle strong{font-size:14px}
+.calc-table-toggle>span:last-child{font-size:24px;color:var(--green)}
+.calc-table-scroll{overflow-x:auto;margin-top:20px}
+.calc-table{width:100%;border-collapse:collapse;font-size:11px;white-space:nowrap}
+.calc-table th,.calc-table td{padding:11px 12px;text-align:right;border-bottom:1px solid var(--line)}
+.calc-table th{color:var(--muted);font-weight:600}
+.calc-table th:first-child,.calc-table td:first-child{text-align:left}
+.calc-table tbody tr:hover{background:#ffffff06}
+@media(max-width:900px){.calc-layout{grid-template-columns:minmax(240px,.8fr) minmax(0,1.2fr);gap:14px}.calc-layout .auth-content{padding:20px}.calc-metrics{grid-template-columns:1fr}.calc-metrics span{min-height:0}.calc-metrics strong{margin-top:5px}}
+@media(max-width:700px){.calc-hero{padding:40px 0 26px}.calc-layout{grid-template-columns:1fr}.calc-layout .auth-content{padding:23px}.calc-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.calc-metrics>div{padding:11px 9px}.calc-metrics span{font-size:9px}.calc-metrics strong{font-size:12px}.calc-back{font-size:10px;padding:9px}.calc-main-value{font-size:34px}.calc-table{font-size:10px}}
+@media(max-width:390px){.calc-metrics{grid-template-columns:1fr}.calc-metrics span{font-size:10px}.calc-metrics strong{font-size:13px}}
