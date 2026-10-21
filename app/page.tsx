@@ -3,8 +3,9 @@
 import { FormEvent, useEffect, useState } from "react";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import Link from "next/link";
+import Watchlist from "./watchlist";
 
-type UserInfo = { email?: string };
+type UserInfo = { id: string; email?: string };
 let supabase: SupabaseClient | null = null;
 
 function getSupabase() {
@@ -309,6 +310,8 @@ export default function Home() {
           )}
         </aside>
       </section>
+
+      <Watchlist userId={user?.id ?? null} />
 
       <section className="preview-section">
         <div className="section-heading">
