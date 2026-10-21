@@ -123,9 +123,24 @@ export default function Home() {
           </span>
         </Link>
 
-        <span className="topbar-label">
-          <span className="status-dot" /> INVESTIMENTO COM FUNDAMENTO
-        </span>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+          }}
+        >
+          <span className="topbar-label">
+            <span className="status-dot" /> INVESTIMENTO COM FUNDAMENTO
+          </span>
+          <Link
+            className="button button-secondary"
+            href="/calculadora"
+            aria-label="Abrir calculadora de investimento"
+          >
+            Calculadora de investimento
+          </Link>
+        </div>
       </nav>
 
       <section className="hero">
