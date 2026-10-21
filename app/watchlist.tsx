@@ -166,13 +166,14 @@ export default function Watchlist({ userId }: { userId: string | null }) {
             <tbody>{assets.map((asset) => {
               const dcf = analysisDetails[asset.id]?.fundamentos?.estimativa_dcf;
               const scenarios = dcf?.scenarios;
+              const hasValidDcf = Array.isArray(scenarios) && scenarios.some((scenario) => scenario.nome === "base" && typeof scenario.valor_por_acao === "number" && Number.isFinite(scenario.valor_por_acao) && scenario.valor_por_acao > 0);
               return (
                 <>
                   <tr key={asset.id}>
                     <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}><strong>{asset.ticker}</strong><div style={{opacity:.7,marginTop:3}}>{asset.nome_empresa || "Empresa por identificar"}</div></td>
                     <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{money(asset.preco_atual,asset.moeda)}</td>
-                    <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{money(asset.valor_intrinseco_estimado,asset.moeda)}</td>
-                    <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{percent(asset.margem_seguranca_atual)}</td>
+                    <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{hasValidDcf ? money(scenarios?.find((scenario) => scenario.nome === "base")?.valor_por_acao ?? null,asset.moeda) : "—"}</td>
+                    <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{hasValidDcf && asset.preco_atual != null ? percent(((scenarios?.find((scenario) => scenario.nome === "base")?.valor_por_acao ?? 0) - asset.preco_atual) / (scenarios?.find((scenario) => scenario.nome === "base")?.valor_por_acao ?? 1) * 100) : "—"}</td>
                     <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{percent(asset.margem_seguranca_alvo)}</td>
                     <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}><button type="button" onClick={()=>void removeAsset(asset.id)} style={{...button,padding:"8px 10px",background:"transparent",color:"inherit",border:"1px solid rgba(248,113,113,.45)"}} aria-label={"Remover "+asset.ticker}>Remover</button></td>
                   </tr>
