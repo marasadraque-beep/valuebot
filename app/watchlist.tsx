@@ -163,35 +163,40 @@ export default function Watchlist({ userId }: { userId: string | null }) {
             <thead><tr style={{textAlign:"left",opacity:.7}}>
               {["Empresa / ticker","Preço atual","Valor intrínseco","Margem atual","Margem alvo",""].map((label)=><th key={label} style={{padding:"12px 10px",borderBottom:"1px solid rgba(148,163,184,.2)",fontWeight:600}}>{label}</th>)}
             </tr></thead>
-            <tbody>{assets.map((asset)=><tr key={asset.id}>
-              <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}><strong>{asset.ticker}</strong><div style={{opacity:.7,marginTop:3}}>{asset.nome_empresa || "Empresa por identificar"}</div></td>
-              <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{money(asset.preco_atual,asset.moeda)}</td>
-              <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{money(asset.valor_intrinseco_estimado,asset.moeda)}</td>
-              <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{percent(asset.margem_seguranca_atual)}</td>
-              <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{percent(asset.margem_seguranca_alvo)}</td>
-              <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}><button type="button" onClick={()=>void removeAsset(asset.id)} style={{...button,padding:"8px 10px",background:"transparent",color:"inherit",border:"1px solid rgba(248,113,113,.45)"}} aria-label={"Remover "+asset.ticker}>Remover</button></td>
-            </tr>
-            {assets.map((asset) => {
+            <tbody>{assets.map((asset) => {
               const dcf = analysisDetails[asset.id]?.fundamentos?.estimativa_dcf;
               const scenarios = dcf?.scenarios;
-              if (!Array.isArray(scenarios) || scenarios.length === 0) {
-                return <tr key={asset.id + "-valuation"}><td colSpan={6} style={{padding:"0 10px 14px",borderBottom:"1px solid rgba(148,163,184,.13)"}}><p style={{margin:0,fontSize:12,opacity:.7}}>{dcf?.estado === "indisponivel" ? (dcf.aviso || "Avaliação indisponível: faltam dados financeiros suficientes.") : "Cenários de avaliação disponíveis após uma análise válida com dados financeiros suficientes."}</p></td></tr>;
-              }
-              return <tr key={asset.id + "-valuation"}><td colSpan={6} style={{padding:"4px 10px 16px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>
-                <div style={{padding:14,borderRadius:12,background:"rgba(148,163,184,.07)"}}>
-                  <strong style={{fontSize:13}}>Cenários DCF indicativos</strong>
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(145px,1fr))",gap:10,marginTop:10}}>
-                    {scenarios.map((scenario) => <div key={scenario.nome} style={{padding:12,borderRadius:10,border:"1px solid rgba(148,163,184,.2)"}}>
-                      <div style={{fontSize:12,opacity:.7,textTransform:"capitalize"}}>{scenario.nome}</div>
-                      <strong style={{display:"block",fontSize:18,margin:"5px 0"}}>{money(scenario.valor_por_acao,asset.moeda)}</strong>
-                      <div style={{fontSize:11,opacity:.7}}>Crescimento FCF: {scenario.crescimento_fcf_anual ?? "—"}</div>
-                      <div style={{fontSize:11,opacity:.7}}>Taxa de desconto: {scenario.taxa_desconto ?? "—"}</div>
-                      <div style={{fontSize:11,opacity:.7}}>Crescimento terminal: {scenario.crescimento_terminal ?? "—"}</div>
-                    </div>)}
-                  </div>
-                  <p style={{fontSize:11,opacity:.65,margin:"10px 0 0"}}>{dcf?.aviso || "Estimativas indicativas baseadas em hipóteses; não são previsões nem aconselhamento financeiro."}</p>
-                </div>
-              </td></tr>;
+              return (
+                <>
+                  <tr key={asset.id}>
+                    <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}><strong>{asset.ticker}</strong><div style={{opacity:.7,marginTop:3}}>{asset.nome_empresa || "Empresa por identificar"}</div></td>
+                    <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{money(asset.preco_atual,asset.moeda)}</td>
+                    <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{money(asset.valor_intrinseco_estimado,asset.moeda)}</td>
+                    <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{percent(asset.margem_seguranca_atual)}</td>
+                    <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{percent(asset.margem_seguranca_alvo)}</td>
+                    <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}><button type="button" onClick={()=>void removeAsset(asset.id)} style={{...button,padding:"8px 10px",background:"transparent",color:"inherit",border:"1px solid rgba(248,113,113,.45)"}} aria-label={"Remover "+asset.ticker}>Remover</button></td>
+                  </tr>
+                  <tr key={asset.id + "-valuation"}><td colSpan={6} style={{padding: scenarios?.length ? "4px 10px 16px" : "0 10px 14px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>
+                    {(!Array.isArray(scenarios) || scenarios.length === 0) ? (
+                      <p style={{margin:0,fontSize:12,opacity:.7}}>{dcf?.estado === "indisponivel" ? (dcf.aviso || "Avaliação indisponível: faltam dados financeiros suficientes.") : "Cenários de avaliação disponíveis após uma análise válida com dados financeiros suficientes."}</p>
+                    ) : (
+                      <div style={{padding:14,borderRadius:12,background:"rgba(148,163,184,.07)"}}>
+                        <strong style={{fontSize:13}}>Cenários DCF indicativos</strong>
+                        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(145px,1fr))",gap:10,marginTop:10}}>
+                          {scenarios.map((scenario) => <div key={scenario.nome} style={{padding:12,borderRadius:10,border:"1px solid rgba(148,163,184,.2)"}}>
+                            <div style={{fontSize:12,opacity:.7,textTransform:"capitalize"}}>{scenario.nome}</div>
+                            <strong style={{display:"block",fontSize:18,margin:"5px 0"}}>{money(scenario.valor_por_acao,asset.moeda)}</strong>
+                            <div style={{fontSize:11,opacity:.7}}>Crescimento FCF: {scenario.crescimento_fcf_anual ?? "—"}</div>
+                            <div style={{fontSize:11,opacity:.7}}>Taxa de desconto: {scenario.taxa_desconto ?? "—"}</div>
+                            <div style={{fontSize:11,opacity:.7}}>Crescimento terminal: {scenario.crescimento_terminal ?? "—"}</div>
+                          </div>)}
+                        </div>
+                        <p style={{fontSize:11,opacity:.65,margin:"10px 0 0"}}>{dcf?.aviso || "Estimativas indicativas baseadas em hipóteses; não são previsões nem aconselhamento financeiro."}</p>
+                      </div>
+                    )}
+                  </td></tr>
+                </>
+              );
             })}</tbody>
           </table>
         </div>
