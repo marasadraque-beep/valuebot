@@ -52,7 +52,7 @@ export default function Watchlist({ userId }: { userId: string | null }) {
   const loadAssets = useCallback(async () => {
     if (!userId) { setAssets([]); return; }
     const supabase = getClient();
-    if (!supabase) { setMessage("A ligação ao Supabase ainda não está configurada neste ambiente de teste."); return; }
+    if (!supabase) { setMessage("A ligação ao Supabase ainda não está configurada."); return; }
     setLoading(true);
     const { data, error } = await supabase
       .from("ativos_monitorizados")
@@ -71,7 +71,7 @@ export default function Watchlist({ userId }: { userId: string | null }) {
     event.preventDefault();
     if (!userId) return;
     const supabase = getClient();
-    if (!supabase) { setMessage("A ligação ao Supabase ainda não está configurada neste ambiente de teste."); return; }
+    if (!supabase) { setMessage("A ligação ao Supabase ainda não está configurada."); return; }
     const cleanTicker = ticker.trim().toUpperCase();
     if (!/^[A-Z0-9][A-Z0-9.-]{0,14}$/.test(cleanTicker)) {
       setMessage("O ticker deve ter até 15 caracteres: letras, números, ponto ou hífen.");
@@ -114,7 +114,7 @@ export default function Watchlist({ userId }: { userId: string | null }) {
     <section style={panel} aria-labelledby="watchlist-title">
       <div style={{display:"flex",justifyContent:"space-between",gap:16,alignItems:"start",flexWrap:"wrap"}}>
         <div>
-          <p style={{fontSize:12,letterSpacing:2,opacity:.7,margin:"0 0 8px"}}>ÁREA PESSOAL · AMBIENTE DE TESTE</p>
+          <p style={{fontSize:12,letterSpacing:2,opacity:.7,margin:"0 0 8px"}}>ÁREA PESSOAL · CONTA PRIVADA</p>
           <h2 id="watchlist-title" style={{fontSize:26,margin:"0 0 8px"}}>A minha lista de ativos</h2>
           <p style={{opacity:.75,margin:"0 0 20px"}}>Guarda empresas para acompanhar. Os preços e avaliações só aparecem quando existirem dados de análise.</p>
         </div>
@@ -152,7 +152,7 @@ export default function Watchlist({ userId }: { userId: string | null }) {
           </table>
         </div>
       )}
-      <p style={{fontSize:12,opacity:.6,margin:"18px 0 0"}}>Esta lista não executa análises financeiras nem consulta preços em tempo real. Os dados são guardados na base de dados de teste.</p>
+      <p style={{fontSize:12,opacity:.6,margin:"18px 0 0"}}>Esta lista não executa análises financeiras nem consulta preços em tempo real. Os dados são guardados na tua conta ValueBot.</p>
     </section>
   );
 }
