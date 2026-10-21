@@ -1,0 +1,30 @@
+name: Validar DCF
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  testar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Obter código
+        uses: actions/checkout@v4
+
+      - name: Instalar Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Executar testes DCF
+        run: deno test supabase/functions/processador-lote/dcf_test.ts
+
+      - name: Instalar dependências Node
+        run: npm install
+
+      - name: Compilar aplicação
+        run: npm run build
