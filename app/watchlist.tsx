@@ -17,7 +17,7 @@ type Asset = {
 };
 
 type DcfScenario = { nome: string; valor_por_acao: number | null; crescimento_fcf_anual?: string; taxa_desconto?: string; crescimento_terminal?: string };
-type AnalysisDetails = { fundamentos?: { estimativa_dcf?: { scenarios?: DcfScenario[]; estado?: string; aviso?: string } } };
+type AnalysisDetails = { fundamentos?: { estimativa_dcf?: { scenarios?: DcfScenario[]; value?: number; estado?: string; aviso?: string } } };
 
 let client: SupabaseClient | null = null;
 function getClient() {
@@ -167,19 +167,25 @@ export default function Watchlist({ userId }: { userId: string | null }) {
               const dcf = analysisDetails[asset.id]?.fundamentos?.estimativa_dcf;
               const scenarios = dcf?.scenarios;
               const hasValidDcf = Array.isArray(scenarios) && scenarios.some((scenario) => scenario.nome === "base" && typeof scenario.valor_por_acao === "number" && Number.isFinite(scenario.valor_por_acao) && scenario.valor_por_acao > 0);
+              const baseValue = scenarios?.find((scenario) => scenario.nome === "base")?.valor_por_acao;
+              const hasLegacyValue = !hasValidDcf && typeof dcf?.value === "number" && Number.isFinite(dcf.value) && dcf.value > 0;
+              const intrinsicValue = hasValidDcf ? baseValue! : hasLegacyValue ? dcf!.value! : null;
+              const marginOfSafety = intrinsicValue !== null && asset.preco_atual != null && intrinsicValue > 0
+                ? ((intrinsicValue - asset.preco_atual) / intrinsicValue) * 100
+                : null;
               return (
                 <>
                   <tr key={asset.id}>
                     <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}><strong>{asset.ticker}</strong><div style={{opacity:.7,marginTop:3}}>{asset.nome_empresa || "Empresa por identificar"}</div></td>
                     <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{money(asset.preco_atual,asset.moeda)}</td>
-                    <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{hasValidDcf ? money(scenarios?.find((scenario) => scenario.nome === "base")?.valor_por_acao ?? null,asset.moeda) : "—"}</td>
-                    <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{hasValidDcf && asset.preco_atual != null ? percent(((scenarios?.find((scenario) => scenario.nome === "base")?.valor_por_acao ?? 0) - asset.preco_atual) / (scenarios?.find((scenario) => scenario.nome === "base")?.valor_por_acao ?? 1) * 100) : "—"}</td>
+                    <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{money(intrinsicValue,asset.moeda)}</td>
+                    <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{percent(marginOfSafety)}</td>
                     <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{percent(asset.margem_seguranca_alvo)}</td>
                     <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}><button type="button" onClick={()=>void removeAsset(asset.id)} style={{...button,padding:"8px 10px",background:"transparent",color:"inherit",border:"1px solid rgba(248,113,113,.45)"}} aria-label={"Remover "+asset.ticker}>Remover</button></td>
                   </tr>
                   <tr key={asset.id + "-valuation"}><td colSpan={6} style={{padding: scenarios?.length ? "4px 10px 16px" : "0 10px 14px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>
                     {(!Array.isArray(scenarios) || scenarios.length === 0) ? (
-                      <p style={{margin:0,fontSize:12,opacity:.7}}>{dcf?.estado === "indisponivel" ? (dcf.aviso || "Avaliação indisponível: faltam dados financeiros suficientes.") : "Cenários de avaliação disponíveis após uma análise válida com dados financeiros suficientes."}</p>
+                      <p style={{margin:0,fontSize:12,opacity:.7}}>{hasLegacyValue ? "Estimativa anterior guardada sem cenários DCF detalhados. Deve ser validada antes de ser utilizada numa decisão de investimento." : dcf?.estado === "indisponivel" ? (dcf.aviso || "Avaliação indisponível: faltam dados financeiros suficientes.") : "Cenários de avaliação disponíveis após uma análise válida com dados financeiros suficientes."}</p>
                     ) : (
                       <div style={{padding:14,borderRadius:12,background:"rgba(148,163,184,.07)"}}>
                         <strong style={{fontSize:13}}>Cenários DCF indicativos</strong>
