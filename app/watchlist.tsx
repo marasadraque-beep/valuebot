@@ -16,6 +16,9 @@ type Asset = {
   margem_seguranca_atual: number | null;
 };
 
+type DcfScenario = { nome: string; valor_por_acao: number | null; crescimento_fcf_anual?: string; taxa_desconto?: string; crescimento_terminal?: string };
+type AnalysisDetails = { fundamentos?: { estimativa_dcf?: { scenarios?: DcfScenario[]; estado?: string; aviso?: string } } };
+
 let client: SupabaseClient | null = null;
 function getClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -42,6 +45,7 @@ const button: React.CSSProperties = {
 
 export default function Watchlist({ userId }: { userId: string | null }) {
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [analysisDetails, setAnalysisDetails] = useState<Record<string, AnalysisDetails>>({});
   const [ticker, setTicker] = useState("");
   const [company, setCompany] = useState("");
   const [margin, setMargin] = useState("25");
@@ -61,7 +65,25 @@ export default function Watchlist({ userId }: { userId: string | null }) {
       .eq("ativo", true)
       .order("created_at", { ascending: false });
     if (error) setMessage("Não foi possível carregar a lista: " + error.message);
-    else { setAssets((data ?? []) as Asset[]); setMessage(""); }
+    else {
+      const loadedAssets = (data ?? []) as Asset[];
+      setAssets(loadedAssets);
+      setMessage("");
+      if (loadedAssets.length) {
+        const { data: analyses, error: analysesError } = await supabase
+          .from("analises_ia")
+          .select("ativo_id,fundamentos,created_at")
+          .in("ativo_id", loadedAssets.map((asset) => asset.id))
+          .order("created_at", { ascending: false });
+        if (!analysesError && analyses) {
+          const latestByAsset: Record<string, AnalysisDetails> = {};
+          for (const analysis of analyses as Array<{ ativo_id: string; fundamentos: AnalysisDetails["fundamentos"] }>) {
+            if (!latestByAsset[analysis.ativo_id]) latestByAsset[analysis.ativo_id] = { fundamentos: analysis.fundamentos ?? undefined };
+          }
+          setAnalysisDetails(latestByAsset);
+        }
+      } else setAnalysisDetails({});
+    }
     setLoading(false);
   }, [userId]);
 
@@ -148,7 +170,29 @@ export default function Watchlist({ userId }: { userId: string | null }) {
               <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{percent(asset.margem_seguranca_atual)}</td>
               <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{percent(asset.margem_seguranca_alvo)}</td>
               <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}><button type="button" onClick={()=>void removeAsset(asset.id)} style={{...button,padding:"8px 10px",background:"transparent",color:"inherit",border:"1px solid rgba(248,113,113,.45)"}} aria-label={"Remover "+asset.ticker}>Remover</button></td>
-            </tr>)}</tbody>
+            </tr>
+            {assets.map((asset) => {
+              const dcf = analysisDetails[asset.id]?.fundamentos?.estimativa_dcf;
+              const scenarios = dcf?.scenarios;
+              if (!Array.isArray(scenarios) || scenarios.length === 0) {
+                return <tr key={asset.id + "-valuation"}><td colSpan={6} style={{padding:"0 10px 14px",borderBottom:"1px solid rgba(148,163,184,.13)"}}><p style={{margin:0,fontSize:12,opacity:.7}}>{dcf?.estado === "indisponivel" ? (dcf.aviso || "Avaliação indisponível: faltam dados financeiros suficientes.") : "Cenários de avaliação disponíveis após uma análise válida com dados financeiros suficientes."}</p></td></tr>;
+              }
+              return <tr key={asset.id + "-valuation"}><td colSpan={6} style={{padding:"4px 10px 16px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>
+                <div style={{padding:14,borderRadius:12,background:"rgba(148,163,184,.07)"}}>
+                  <strong style={{fontSize:13}}>Cenários DCF indicativos</strong>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(145px,1fr))",gap:10,marginTop:10}}>
+                    {scenarios.map((scenario) => <div key={scenario.nome} style={{padding:12,borderRadius:10,border:"1px solid rgba(148,163,184,.2)"}}>
+                      <div style={{fontSize:12,opacity:.7,textTransform:"capitalize"}}>{scenario.nome}</div>
+                      <strong style={{display:"block",fontSize:18,margin:"5px 0"}}>{money(scenario.valor_por_acao,asset.moeda)}</strong>
+                      <div style={{fontSize:11,opacity:.7}}>Crescimento FCF: {scenario.crescimento_fcf_anual ?? "—"}</div>
+                      <div style={{fontSize:11,opacity:.7}}>Taxa de desconto: {scenario.taxa_desconto ?? "—"}</div>
+                      <div style={{fontSize:11,opacity:.7}}>Crescimento terminal: {scenario.crescimento_terminal ?? "—"}</div>
+                    </div>)}
+                  </div>
+                  <p style={{fontSize:11,opacity:.65,margin:"10px 0 0"}}>{dcf?.aviso || "Estimativas indicativas baseadas em hipóteses; não são previsões nem aconselhamento financeiro."}</p>
+                </div>
+              </td></tr>;
+            })}</tbody>
           </table>
         </div>
       )}
