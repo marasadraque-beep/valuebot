@@ -194,8 +194,7 @@ export default function Home() {
                 <div>
                   <strong>Próxima etapa</strong>
                   <p>
-                    Vamos ligar o teu perfil de investidor e a lista de ativos
-                    ao painel.
+                    Já podes consultar e gerir a tua lista de ativos. As avaliações aparecem quando estiverem disponíveis.
                   </p>
                 </div>
               </div>
