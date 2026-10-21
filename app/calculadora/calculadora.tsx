@@ -47,7 +47,6 @@ function limitar(valor: number, minimo: number, maximo: number) {
 
 function calcular(p: Parametros): PontoAno[] {
   const mensal = Math.pow(1 + p.rentabilidade / 100, 1 / 12) - 1;
-  const inflacaoMensal = Math.pow(1 + p.inflacao / 100, 1 / 12) - 1;
   let valor = p.capital;
   let investido = p.capital;
   let reforcoMensal = p.reforco;
@@ -76,7 +75,6 @@ function calcular(p: Parametros): PontoAno[] {
     }
   }
 
-  void inflacaoMensal;
   return pontos;
 }
 
@@ -88,11 +86,6 @@ function formatar(valor: number, moeda: Moeda) {
   }).format(Number.isFinite(valor) ? valor : 0);
 }
 
-function formatarDecimal(valor: number, maximo = 2) {
-  return new Intl.NumberFormat("pt-PT", {
-    maximumFractionDigits: maximo,
-  }).format(valor);
-}
 
 function LinhaCampo({
   id,
