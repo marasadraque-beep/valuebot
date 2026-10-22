@@ -157,13 +157,30 @@ Deno.serve(async (req: Request) => {
   }
 
   let requested: unknown = ALLOWED_SYMBOLS;
-  try {
-    const body = await req.json();
-    if (body && typeof body === "object" && "symbols" in body) {
-      requested = (body as { symbols?: unknown }).symbols;
+  const rawBody = await req.text();
+
+  if (rawBody.trim().length > 0) {
+    let body: unknown;
+
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return json({ error: "JSON inválido." }, 400);
     }
-  } catch {
-    // Corpo vazio: utiliza a lista predefinida.
+
+    if (
+      body === null ||
+      typeof body !== "object" ||
+      Array.isArray(body)
+    ) {
+      return json({ error: "O corpo deve ser um objeto JSON." }, 400);
+    }
+
+    if ("symbols" in body) {
+      requested = (body as { symbols?: unknown }).symbols;
+    } else {
+      return json({ error: "Indica a lista de símbolos." }, 400);
+    }
   }
 
   if (
