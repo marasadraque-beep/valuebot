@@ -21,6 +21,9 @@ const ENDPOINTS = [
   "discounted-cash-flow",
 ] as const;
 
+// Limita o custo externo por execução: no máximo 4 símbolos × 6 endpoints.
+const MAX_SYMBOLS_PER_REQUEST = 4;
+
 type EndpointResult = {
   endpoint: string;
   status: number;
@@ -156,37 +159,38 @@ Deno.serve(async (req: Request) => {
     }, 500);
   }
 
-  let requested: unknown = ALLOWED_SYMBOLS;
   const rawBody = await req.text();
+  if (rawBody.trim().length === 0) {
+    return json({
+      error: "O corpo é obrigatório. Envia um objeto JSON com symbols.",
+      maxSymbolsPerRequest: MAX_SYMBOLS_PER_REQUEST,
+    }, 400);
+  }
 
-  if (rawBody.trim().length > 0) {
-    let body: unknown;
-
-    try {
-      body = JSON.parse(rawBody);
-    } catch {
-      return json({ error: "JSON inválido." }, 400);
-    }
-
-    if (
-      body === null ||
-      typeof body !== "object" ||
-      Array.isArray(body)
-    ) {
-      return json({ error: "O corpo deve ser um objeto JSON." }, 400);
-    }
-
-    if ("symbols" in body) {
-      requested = (body as { symbols?: unknown }).symbols;
-    } else {
-      return json({ error: "Indica a lista de símbolos." }, 400);
-    }
+  let body: unknown;
+  try {
+    body = JSON.parse(rawBody);
+  } catch {
+    return json({ error: "JSON inválido." }, 400);
   }
 
   if (
+    body === null ||
+    typeof body !== "object" ||
+    Array.isArray(body)
+  ) {
+    return json({ error: "O corpo deve ser um objeto JSON." }, 400);
+  }
+
+  if (!("symbols" in body)) {
+    return json({ error: "Indica a lista de símbolos." }, 400);
+  }
+
+  const requested = (body as { symbols?: unknown }).symbols;
+  if (
     !Array.isArray(requested) ||
     requested.length === 0 ||
-    requested.length > ALLOWED_SYMBOLS.length ||
+    requested.length > MAX_SYMBOLS_PER_REQUEST ||
     !requested.every(
       (value) =>
         typeof value === "string" &&
@@ -194,7 +198,8 @@ Deno.serve(async (req: Request) => {
     )
   ) {
     return json({
-      error: "Lista de símbolos inválida.",
+      error: "Lista de símbolos inválida ou acima do limite por pedido.",
+      maxSymbolsPerRequest: MAX_SYMBOLS_PER_REQUEST,
       allowedSymbols: ALLOWED_SYMBOLS,
     }, 400);
   }
