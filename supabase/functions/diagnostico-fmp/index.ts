@@ -5,24 +5,7 @@ const JSON_HEADERS = {
   "Cache-Control": "no-store",
 };
 
-const ALLOWED_SYMBOLS = [
-  "AAPL", "MSFT",
-  "EDP.LS", "GALP.LS", "JMT.LS",
-  "PETR4.SA", "WEGE3.SA", "ITUB4.SA",
-  "VWCE.DE", "IWDA.AS", "EXSA.DE",
-] as const;
-
-const ENDPOINTS = [
-  "profile",
-  "quote",
-  "income-statement",
-  "balance-sheet-statement",
-  "cash-flow-statement",
-  "discounted-cash-flow",
-] as const;
-
-// Limita o custo externo por execução: no máximo 4 símbolos × 6 endpoints.
-const MAX_SYMBOLS_PER_REQUEST = 4;
+import { ALLOWED_SYMBOLS, ENDPOINTS, MAX_SYMBOLS_PER_REQUEST, validateSymbolsBody } from "./validation.ts";
 
 type EndpointResult = {
   endpoint: string;
@@ -174,37 +157,20 @@ Deno.serve(async (req: Request) => {
     return json({ error: "JSON inválido." }, 400);
   }
 
-  if (
-    body === null ||
-    typeof body !== "object" ||
-    Array.isArray(body)
-  ) {
-    return json({ error: "O corpo deve ser um objeto JSON." }, 400);
-  }
-
-  if (!("symbols" in body)) {
-    return json({ error: "Indica a lista de símbolos." }, 400);
-  }
-
-  const requested = (body as { symbols?: unknown }).symbols;
-  if (
-    !Array.isArray(requested) ||
-    requested.length === 0 ||
-    requested.length > MAX_SYMBOLS_PER_REQUEST ||
-    !requested.every(
-      (value) =>
-        typeof value === "string" &&
-        (ALLOWED_SYMBOLS as readonly string[]).includes(value),
-    )
-  ) {
+  const validation = validateSymbolsBody(body);
+  if (!validation.ok) {
     return json({
-      error: "Lista de símbolos inválida ou acima do limite por pedido.",
-      maxSymbolsPerRequest: MAX_SYMBOLS_PER_REQUEST,
-      allowedSymbols: ALLOWED_SYMBOLS,
-    }, 400);
+      error: validation.error,
+      ...(validation.maxSymbolsPerRequest !== undefined
+        ? { maxSymbolsPerRequest: validation.maxSymbolsPerRequest }
+        : {}),
+      ...(validation.allowedSymbols !== undefined
+        ? { allowedSymbols: validation.allowedSymbols }
+        : {}),
+    }, validation.status);
   }
 
-  const symbols = [...new Set(requested as string[])];
+  const symbols = validation.symbols;
   const tasks = symbols.flatMap((symbol) =>
     ENDPOINTS.map((endpoint) => ({ symbol, endpoint }))
   );
