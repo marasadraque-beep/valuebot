@@ -1,11 +1,11 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { ENDPOINTS, MAX_SYMBOLS_PER_REQUEST, validateSymbolsBody } from "./validation.ts";
 
 const JSON_HEADERS = {
   "Content-Type": "application/json",
   "Cache-Control": "no-store",
 };
 
-import { ALLOWED_SYMBOLS, ENDPOINTS, MAX_SYMBOLS_PER_REQUEST, validateSymbolsBody } from "./validation.ts";
 
 type EndpointResult = {
   endpoint: string;
