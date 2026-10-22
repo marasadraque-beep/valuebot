@@ -51,6 +51,7 @@ export default function Watchlist({ userId }: { userId: string | null }) {
   const [margin, setMargin] = useState("25");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [reanalyzingAssetId, setReanalyzingAssetId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
 
   const loadAssets = useCallback(async () => {
@@ -126,6 +127,37 @@ export default function Watchlist({ userId }: { userId: string | null }) {
     else { setAssets((current) => current.filter((asset) => asset.id !== id)); setMessage("Ativo removido."); }
   }
 
+  async function requestReanalysis(asset: Asset) {
+    if (!userId || reanalyzingAssetId) return;
+    const supabase = getClient();
+    if (!supabase) {
+      setMessage("A ligação ao Supabase ainda não está configurada.");
+      return;
+    }
+
+    setReanalyzingAssetId(asset.id);
+    setMessage("");
+    try {
+      const { error } = await supabase.rpc("pedir_reanalise", {
+        p_ativo_id: asset.id,
+      });
+
+      if (error) {
+        setMessage("Não foi possível pedir a reanálise de " + asset.ticker + ": " + error.message);
+        return;
+      }
+
+      setAssets((current) => current.map((item) =>
+        item.id === asset.id ? { ...item, status_processamento: "pendente" } : item
+      ));
+      setMessage("Pedido de reanálise de " + asset.ticker + " enviado para a fila. A avaliação será atualizada quando o processamento terminar.");
+    } catch {
+      setMessage("Ocorreu um erro ao pedir a reanálise. Tenta novamente.");
+    } finally {
+      setReanalyzingAssetId(null);
+    }
+  }
+
   if (!userId) return null;
 
   const money = (value: number | null, currency: string | null) =>
@@ -181,7 +213,14 @@ export default function Watchlist({ userId }: { userId: string | null }) {
                     <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{money(intrinsicValue,asset.moeda)}</td>
                     <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{percent(marginOfSafety)}</td>
                     <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>{percent(asset.margem_seguranca_alvo)}</td>
-                    <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}><button type="button" onClick={()=>void removeAsset(asset.id)} style={{...button,padding:"8px 10px",background:"transparent",color:"inherit",border:"1px solid rgba(248,113,113,.45)"}} aria-label={"Remover "+asset.ticker}>Remover</button></td>
+                    <td style={{padding:"14px 10px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>
+                      <div style={{display:"flex",flexDirection:"column",gap:8,minWidth:145}}>
+                        <button type="button" onClick={() => void requestReanalysis(asset)} disabled={reanalyzingAssetId !== null || asset.status_processamento === "a_processar"} style={{...button,padding:"8px 10px",opacity:reanalyzingAssetId !== null || asset.status_processamento === "a_processar" ? .55 : 1}}>
+                          {reanalyzingAssetId === asset.id ? "A pedir…" : asset.status_processamento === "a_processar" ? "Em processamento…" : "Pedir nova análise"}
+                        </button>
+                        <button type="button" onClick={() => void removeAsset(asset.id)} style={{...button,padding:"8px 10px",background:"transparent",color:"inherit",border:"1px solid rgba(248,113,113,.45)"}} aria-label={"Remover "+asset.ticker}>Remover</button>
+                      </div>
+                    </td>
                   </tr>
                   <tr key={asset.id + "-valuation"}><td colSpan={6} style={{padding: scenarios?.length ? "4px 10px 16px" : "0 10px 14px",borderBottom:"1px solid rgba(148,163,184,.13)"}}>
                     {(!Array.isArray(scenarios) || scenarios.length === 0) ? (
