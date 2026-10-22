@@ -23,6 +23,9 @@ jobs:
       - name: Executar testes DCF
         run: deno test supabase/functions/processador-lote/dcf_test.ts
 
+      - name: Executar testes de validação FMP (sem chamadas externas)
+        run: deno test supabase/functions/diagnostico-fmp/validation_test.ts
+
       - name: Instalar dependências Node
         run: npm install
 
